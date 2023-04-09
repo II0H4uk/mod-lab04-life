@@ -1,12 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.IO;
-using System.Threading;
 
 namespace cli_life
 {
@@ -20,24 +12,19 @@ namespace cli_life
         public int Width { get { return Columns * CellSize; } }
         public int Height { get { return Rows * CellSize; } }
 
-        public int WidthC { get; set; }
-        public int HeightC { get; set; }
-        public int CellSizeC { get; set; }
-        public double LiveDensityC { get; set; }
-
-        public Board(int widthC, int heightC, int cellSizeC, double liveDensityC)
+        public Board(int width, int height, int cellSize, double liveDensity)
         {
-            CellSize = cellSizeC;
+            CellSize = cellSize;
 
-            Cells = new Cell[heightC / cellSizeC, widthC / cellSizeC];
+            Cells = new Cell[height / cellSize, width / cellSize];
             for (int x = 0; x < Rows; x++)
                 for (int y = 0; y < Columns; y++)
                     Cells[x, y] = new Cell();
 
             ConnectNeighbors();
-            Randomize(liveDensityC);
+            Randomize(liveDensity);
         }
-
+        
         readonly Random rand = new Random();
         public void Randomize(double liveDensity)
         {
