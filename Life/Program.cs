@@ -1,5 +1,4 @@
 using System;
-using System.Text.Json;
 using System.IO;
 using System.Collections.Generic;
 using System.Threading;
@@ -19,8 +18,12 @@ namespace cli_life
 
         public static void Reset()
         {
-            string ConfigJSON = File.ReadAllText("config.json");
-            board = JsonSerializer.Deserialize<Board>(ConfigJSON);
+            Config a = new Config(File.ReadAllText("config.json"));
+            board = new Board(
+                width: a.width,
+                height: a.height,
+                cellSize: a.cellSize,
+                liveDensity: a.liveDensity);
         }
 
         public static void Render()
