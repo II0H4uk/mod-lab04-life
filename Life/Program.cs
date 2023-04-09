@@ -1,130 +1,165 @@
-﻿using System;
+using System;
+using System.Text.Json;
+using System.IO;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Threading;
 
 namespace cli_life
 {
-    public class Cell
-    {
-        public bool IsAlive;
-        public readonly List<Cell> neighbors = new List<Cell>();
-        private bool IsAliveNext;
-        public void DetermineNextLiveState()
-        {
-            int liveNeighbors = neighbors.Where(x => x.IsAlive).Count();
-            if (IsAlive)
-                IsAliveNext = liveNeighbors == 2 || liveNeighbors == 3;
-            else
-                IsAliveNext = liveNeighbors == 3;
-        }
-        public void Advance()
-        {
-            IsAlive = IsAliveNext;
-        }
-    }
-    public class Board
-    {
-        public readonly Cell[,] Cells;
-        public readonly int CellSize;
-
-        public int Columns { get { return Cells.GetLength(0); } }
-        public int Rows { get { return Cells.GetLength(1); } }
-        public int Width { get { return Columns * CellSize; } }
-        public int Height { get { return Rows * CellSize; } }
-
-        public Board(int width, int height, int cellSize, double liveDensity = .1)
-        {
-            CellSize = cellSize;
-
-            Cells = new Cell[width / cellSize, height / cellSize];
-            for (int x = 0; x < Columns; x++)
-                for (int y = 0; y < Rows; y++)
-                    Cells[x, y] = new Cell();
-
-            ConnectNeighbors();
-            Randomize(liveDensity);
-        }
-
-        readonly Random rand = new Random();
-        public void Randomize(double liveDensity)
-        {
-            foreach (var cell in Cells)
-                cell.IsAlive = rand.NextDouble() < liveDensity;
-        }
-
-        public void Advance()
-        {
-            foreach (var cell in Cells)
-                cell.DetermineNextLiveState();
-            foreach (var cell in Cells)
-                cell.Advance();
-        }
-        private void ConnectNeighbors()
-        {
-            for (int x = 0; x < Columns; x++)
-            {
-                for (int y = 0; y < Rows; y++)
-                {
-                    int xL = (x > 0) ? x - 1 : Columns - 1;
-                    int xR = (x < Columns - 1) ? x + 1 : 0;
-
-                    int yT = (y > 0) ? y - 1 : Rows - 1;
-                    int yB = (y < Rows - 1) ? y + 1 : 0;
-
-                    Cells[x, y].neighbors.Add(Cells[xL, yT]);
-                    Cells[x, y].neighbors.Add(Cells[x, yT]);
-                    Cells[x, y].neighbors.Add(Cells[xR, yT]);
-                    Cells[x, y].neighbors.Add(Cells[xL, y]);
-                    Cells[x, y].neighbors.Add(Cells[xR, y]);
-                    Cells[x, y].neighbors.Add(Cells[xL, yB]);
-                    Cells[x, y].neighbors.Add(Cells[x, yB]);
-                    Cells[x, y].neighbors.Add(Cells[xR, yB]);
-                }
-            }
-        }
-    }
-    class Program
+    public class Program
     {
         static Board board;
-        static private void Reset()
+        static string boardSave;
+        static bool isStopped = false;
+        static bool isPaused = false;
+        public static int countLive;
+        static List<Figure> figures;
+        static int speed = 1;
+        public static List<string> check;
+
+        public static void Reset()
         {
-            board = new Board(
-                width: 50,
-                height: 20,
-                cellSize: 1,
-                liveDensity: 0.5);
+            string ConfigJSON = File.ReadAllText("config.json");
+            board = JsonSerializer.Deserialize<Board>(ConfigJSON);
         }
-        static void Render()
+
+        public static void Render()
         {
+            boardSave = "";
+            countLive = 0;
             for (int row = 0; row < board.Rows; row++)
             {
-                for (int col = 0; col < board.Columns; col++)   
+                for (int col = 0; col < board.Columns; col++)
                 {
-                    var cell = board.Cells[col, row];
+                    var cell = board.Cells[row, col];
                     if (cell.IsAlive)
                     {
                         Console.Write('*');
+                        countLive++;
+                        boardSave += '*';
                     }
                     else
                     {
                         Console.Write(' ');
+                        boardSave += ' ';
                     }
                 }
                 Console.Write('\n');
+                boardSave += '\n';
             }
         }
-        static void Main(string[] args)
+
+        public static int Main()
         {
             Reset();
-            while(true)
+            Thread checking = new Thread(CheckAsync);
+            checking.Start();
+
+            while (!isStopped)
             {
                 Console.Clear();
                 Render();
                 board.Advance();
-                Thread.Sleep(1000);
+                Thread.Sleep(1000 / speed);
+                while (isPaused)
+                    Thread.Sleep(250);
+            }
+            return 0;
+        }
+
+        static void CheckAsync()
+        {
+            while (!isStopped)
+            {
+                while (Console.KeyAvailable == false)
+                    Thread.Sleep(250);
+                ConsoleKeyInfo name = Console.ReadKey();
+                if (name.KeyChar == 'q')
+                    isStopped = true;
+                else if (name.KeyChar == 's')
+                    File.WriteAllText("Last system cond.txt", boardSave);
+                else if (name.KeyChar == 'l')
+                    Load("Last system cond.txt");
+                if (name.KeyChar == 'i')
+                    Info();
+                if (name.KeyChar == 'p')
+                {
+                    isPaused = !isPaused;
+                    Console.WriteLine("Пауза. Чтобы продолжить повторно нажмите p");
+                }
+                if (name.KeyChar == 'e')
+                    speed = (speed == 1) ? 1000 : 1;
+
+            }
+        }
+
+        public static void Load(string path)
+        {
+            string[] buf = File.ReadAllLines(path);
+            isPaused = true;
+            for (int row = 0; row < board.Rows; row++)
+                for (int col = 0; col < board.Columns; col++)
+                    board.Cells[row, col].IsAlive = buf[row][col] == '*';
+            isPaused = false;
+        }
+
+        public static void Info()
+        {
+            Console.WriteLine("\n\nКоличество живых: " + countLive.ToString());
+            ReadFigures();
+            isPaused = true;
+            bool notFound = false;
+            check = new List<string>();
+            for (int x = 0; x < board.Rows; x++)
+            {
+                for (int y = 0; y < board.Columns; y++)
+                    for (int k = 0; k < figures.Count; k++)
+                    {
+                        for (int i = x, matrixX = 0; i < x + figures[k].Rows; i++)
+                        {
+                            for (int j = y, matrixY = 0; j < y + figures[k].Columns; j++)
+                            {
+                                if (board.Cells[i < board.Rows ? i : i - board.Rows, j < board.Columns ? j : j - board.Columns].IsAlive ^ figures[k].Matrix[matrixX][matrixY])
+                                    notFound = true;
+                                matrixY++;
+                            }
+                            matrixX++;
+                        }
+                        if (!notFound)
+                        {
+                            Console.WriteLine($"В точке {x.ToString() + " " + y.ToString()} обнаружена фигура {figures[k].Name}");
+                            check.Add($"{x} {y} - {figures[k].Name}");
+                        }
+                        notFound = false;
+                    }
+            }
+            isPaused = false;
+            File.WriteAllLines("Founded figures.txt", check);
+        }
+
+        static void ReadFigures()
+        {
+            string buff = File.ReadAllText("figures.txt");
+            string[] lines = buff.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+            figures = new List<Figure>();
+
+            string nameBuf;
+            string[] buf;
+            int columns;
+            int rows;
+            string[] matrixBuf;
+
+            for (int i = 0; lines[i] != "-"; i = i + rows + 2)
+            {
+                buf = lines[i + 1].Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                columns = int.Parse(buf[0]);
+                rows = int.Parse(buf[1]);
+                nameBuf = lines[i];
+                matrixBuf = new string[rows];
+                for (int j = 0; j < rows; j++)
+                    matrixBuf[j] = lines[i + j + 2];
+
+                figures.Add(new Figure(nameBuf, rows, columns, matrixBuf));
             }
         }
     }
