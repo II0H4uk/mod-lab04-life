@@ -37,7 +37,7 @@ namespace cli_life
             Program.Render();
             Program.Info();
 
-            string[] expected = File.ReadAllLines("expected1.txt");
+            string[] expected = File.ReadAllLines("../../../../Life/expected1.txt");
             List<string> expectedList = new List<string>();
             foreach (string a in expected)
                 expectedList.Add(a);
@@ -56,7 +56,7 @@ namespace cli_life
             Program.Render();
             Program.Info();
 
-            string[] expected = File.ReadAllLines("expected2.txt");
+            string[] expected = File.ReadAllLines("../../../../Life/xpected2.txt");
             List<string> expectedList = new List<string>();
             foreach (string a in expected)
                 expectedList.Add(a);
@@ -75,7 +75,7 @@ namespace cli_life
             Program.Render();
             Program.Info();
 
-            string[] expected = File.ReadAllLines("expected3.txt");
+            string[] expected = File.ReadAllLines("../../../../Life/expected3.txt");
             List<string> expectedList = new List<string>();
             foreach (string a in expected)
                 expectedList.Add(a);
