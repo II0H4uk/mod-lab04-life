@@ -142,7 +142,7 @@ namespace cli_life
 
         static void ReadFigures()
         {
-            string buff = File.ReadAllText("figures.txt");
+            string buff = File.ReadAllText("../../../../Life/figures.txt");
             string[] lines = buff.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
             figures = new List<Figure>();
 
