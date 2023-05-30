@@ -1,10 +1,9 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using cli_life;
 using System.IO;
 using System.Collections.Generic;
 
-namespace NET
+namespace cli_life
 {
     [TestClass]
     public class UnitTest1
