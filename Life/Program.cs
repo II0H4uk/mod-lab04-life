@@ -18,7 +18,7 @@ namespace cli_life
 
         public static void Reset()
         {
-            Config a = new Config(File.ReadAllText("config.json"));
+            Config a = new Config(File.ReadAllText("../../../../Life/config.json"));
             board = new Board(
                 width: a.width,
                 height: a.height,
