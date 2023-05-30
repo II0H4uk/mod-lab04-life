@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="Life\cli_life.csproj" />
+    <ProjectReference Include="..\Life\cli_life.csproj" />
   </ItemGroup>
 
 </Project>
