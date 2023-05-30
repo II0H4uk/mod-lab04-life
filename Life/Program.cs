@@ -98,7 +98,7 @@ namespace cli_life
 
         public static void Load(string path)
         {
-            string[] buf = File.ReadAllLines(path);
+            string[] buf = File.ReadAllLines("../../../../Life/" + path);
             isPaused = true;
             for (int row = 0; row < board.Rows; row++)
                 for (int col = 0; col < board.Columns; col++)
