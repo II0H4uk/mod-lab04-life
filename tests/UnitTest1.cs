@@ -56,7 +56,7 @@ namespace cli_life
             Program.Render();
             Program.Info();
 
-            string[] expected = File.ReadAllLines("../../../../Life/xpected2.txt");
+            string[] expected = File.ReadAllLines("../../../../Life/expected2.txt");
             List<string> expectedList = new List<string>();
             foreach (string a in expected)
                 expectedList.Add(a);
